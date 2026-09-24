@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamView Analytics — Dashboard Analítico Interactivo (EP1)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .tab-active { border-bottom: 3px solid #1f77b4; color: #1f77b4; font-weight: 600; }
+    .card-shadow { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- Header / Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+          SV
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 leading-tight">StreamView Analytics</h1>
+          <p class="text-xs text-slate-500">Evaluación Parcial EP1 — Duoc UC | Dashboard Ejecutivo</p>
+        </div>
+      </div>
+      
+      <!-- Tab Navigation -->
+      <nav class="flex space-x-6">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-active py-2 px-1 text-sm font-medium transition-colors">
+          📊 Dashboard Interactivo
+        </button>
+        <button onclick="switchTab('story')" id="btn-story" class="text-slate-500 hover:text-slate-700 py-2 px-1 text-sm font-medium transition-colors">
+          📖 Data Storytelling (Narrativa)
+        </button>
+        <button onclick="switchTab('audit')" id="btn-audit" class="text-slate-500 hover:text-slate-700 py-2 px-1 text-sm font-medium transition-colors">
+          📋 Auditoría & Arquitectura
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: DASHBOARD INTERACTIVO               -->
+    <!-- ========================================== -->
+    <section id="tab-dashboard" class="space-y-6">
+      
+      <!-- KPI Header Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Títulos</p>
+          <p class="text-2xl font-black text-slate-900 mt-1" id="kpi-total">31,991</p>
+          <span class="text-xs text-emerald-600 font-medium">100% catálogo unificado</span>
+        </div>
+        
+        <div class="bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Películas</p>
+          <p class="text-2xl font-black text-blue-600 mt-1" id="kpi-movies">16,000</p>
+          <span class="text-xs text-slate-500">50.0% del catálogo</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Series de TV</p>
+          <p class="text-2xl font-black text-amber-600 mt-1" id="kpi-tv">15,991</p>
+          <span class="text-xs text-slate-500">50.0% del catálogo</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rating Bayesiano</p>
+          <p class="text-2xl font-black text-indigo-600 mt-1">6.63 ★</p>
+          <span class="text-xs text-slate-500">Ponderado por volumen</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cobertura Votos</p>
+          <p class="text-2xl font-black text-emerald-600 mt-1">85.7%</p>
+          <span class="text-xs text-slate-500">27,431 con calificación</span>
+        </div>
+      </div>
+
+      <!-- Interactive Filters Bar -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 card-shadow flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Filtrar por:</label>
+          <select id="filter-type" onchange="applyFilters()" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="ALL">Todos los formatos (Películas y Series)</option>
+            <option value="Movie">Solo Películas (Movies)</option>
+            <option value="TV Show">Solo Series (TV Shows)</option>
+          </select>
+          
+          <select id="filter-min-rating" onchange="applyFilters()" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="0">Cualquier Calificación</option>
+            <option value="6.5">Rating Ponderado ≥ 6.5</option>
+            <option value="7.0">Rating Ponderado ≥ 7.0 (Alta Calidad)</option>
+            <option value="7.5">Rating Ponderado ≥ 7.5 (Excelencia)</option>
+          </select>
+        </div>
+        <p class="text-xs text-slate-500 italic">Métricas sincronizadas con Tableau</p>
+      </div>
+
+      <!-- Charts Grid Row 1 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Chart 1: Genres Bar Chart -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 card-shadow">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Top 12 Géneros de Contenido</h2>
+              <p class="text-xs text-slate-500">Longitud = Cantidad de Títulos | Taxonomía Armonizada</p>
+            </div>
+            <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-medium">IE4 / IE5 / IE7</span>
+          </div>
+          <div class="h-80">
+            <canvas id="chartGenres"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Top Countries -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 card-shadow">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Top 10 Países Productores</h2>
+              <p class="text-xs text-slate-500">Distribución de primary_country (Para mapa en Tableau)</p>
+            </div>
+            <span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-medium">IE6 / IE7</span>
+          </div>
+          <div class="h-80">
+            <canvas id="chartCountries"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts Grid Row 2 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Chart 3: Temporal Evolution -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 card-shadow">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Evolución Temporal de Incorporación</h2>
+              <p class="text-xs text-slate-500">Títulos agregados por año (date_added) — Películas vs Series</p>
+            </div>
+            <span class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded font-medium">IE7 / IE9 / IE10</span>
+          </div>
+          <div class="h-80">
+            <canvas id="chartTimeline"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 4: Quality vs Popularity Matrix -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 card-shadow">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Matriz Calidad vs. Popularidad</h2>
+              <p class="text-xs text-slate-500">4 Cuadrantes Estratégicos: Joyas Ocultas vs Éxitos Masivos</p>
+            </div>
+            <span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded font-medium">IE5 / IE6 / IE9</span>
+          </div>
+          <div class="h-80">
+            <canvas id="chartScatter"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: DATA STORYTELLING (NARRATIVA)       -->
+    <!-- ========================================== -->
+    <section id="tab-story" class="hidden space-y-6">
+      
+      <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 rounded-2xl shadow-lg">
+        <span class="bg-blue-500/30 text-blue-200 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
+          Rúbrica Duoc UC — IE10: Narrativa Visual (18%)
+        </span>
+        <h2 class="text-2xl font-black mt-3">De los Datos a la Decisión: El Story de StreamView</h2>
+        <p class="text-sm text-blue-100 mt-1 max-w-3xl">
+          Estructura narrativa SCQA (Situación, Complicación, Pregunta, Respuesta) diseñada para guiar al comité ejecutivo desde el diagnóstico del catálogo hasta recomendaciones accionables de negocio.
+        </p>
+      </div>
+
+      <!-- Story Step Cards -->
+      <div class="space-y-4">
+        
+        <!-- Step 1 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow flex gap-5">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 text-blue-700 font-black text-lg flex items-center justify-center">
+            1
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Situación: Un Catálogo Global de Gran Escala</h3>
+              <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">31,991 Títulos</span>
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              StreamView Analytics cuenta con un catálogo robusto y perfectamente equilibrado: <strong>16,000 películas (50.0%)</strong> y <strong>15,991 series (50.0%)</strong>. El 85.7% del catálogo posee validación social mediante calificaciones activas de usuarios, con una media ponderada global de <strong>6.63 puntos</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow flex gap-5">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 font-black text-lg flex items-center justify-center">
+            2
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Complicación: La Trampa del Volumen vs. Calidad en Géneros</h3>
+              <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">Hallazgo Crítico</span>
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              <strong>Drama (14,484 títulos)</strong> y <strong>Comedia (8,693 títulos)</strong> concentran más del 55% de la oferta total. Sin embargo, no son los géneros mejor calificados. Categorías con menor volumen como <strong>Animación (7.05 ★)</strong> y <strong>Documentales (7.10 ★)</strong> exhiben índices de satisfacción significativamente superiores, revelando una oportunidad desaprovechada de engagement.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow flex gap-5">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 text-purple-700 font-black text-lg flex items-center justify-center">
+            3
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Expansión: El Crecimiento de las Producciones Asiáticas</h3>
+              <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">Tendencia Global</span>
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              Si bien Estados Unidos lidera la producción histórica con 8,181 títulos (27.5%), los mercados de <strong>Japón (2,761)</strong>, <strong>China (2,283)</strong> y <strong>Corea del Sur (2,070)</strong> representan juntos más del 24% del catálogo, con series de TV que exhiben tasas de retención y fidelidad superiores a la media occidental.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow flex gap-5">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 text-amber-700 font-black text-lg flex items-center justify-center">
+            4
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Estrategia Temporal: Aceleración y Renovación de Catálogo</h3>
+              <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">2018 - 2025</span>
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              El análisis de la variable restituida <code>date_added</code> demuestra que la plataforma aceleró agresivamente la incorporación de contenidos entre 2018 y 2022 para sostener la retención ante la entrada de nuevos competidores en streaming.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow flex gap-5">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 font-black text-lg flex items-center justify-center">
+            5
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Resolución: Recomendaciones Estratégicas Accionables</h3>
+              <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Decisiones Clave</span>
+            </div>
+            <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+              <li><strong>Activar el cuadrante de "Joyas Ocultas":</strong> Crear colecciones personalizadas para producciones con alto rating ponderado (≥7.5) que carecen de tracción masiva.</li>
+              <li><strong>Diversificar hacia Animación y Documental:</strong> Incrementar la inversión en géneros con altos índices de satisfacción del usuario.</li>
+              <li><strong>Consolidar alianzas con estudios de Corea del Sur y Japón:</strong> Aprovechar la alta relación calidad/popularidad de sus series para reducir el churn en audiencias jóvenes.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: AUDITORÍA & ARQUITECTURA            -->
+    <!-- ========================================== -->
+    <section id="tab-audit" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 card-shadow space-y-4">
+        <h2 class="text-lg font-bold text-slate-900">Documentación de Auditoría Técnica para Evaluación Humana</h2>
+        <p class="text-sm text-slate-600">
+          Esta sección resume las soluciones aplicadas en el código para revisión y defensa grupal:
+        </p>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase font-semibold">
+                <th class="p-3">Componente</th>
+                <th class="p-3">Problema Inicial</th>
+                <th class="p-3">Solución Técnica Aplicada</th>
+                <th class="p-3">Impacto en Tableau</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Modelado de Géneros</td>
+                <td class="p-3 text-red-600">Wide format (genre_1...genre_8)</td>
+                <td class="p-3 text-emerald-700">Desanidado (explode) + tabla puente</td>
+                <td class="p-3">Filtros nativos, barras y treemaps funcionales</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Poda de Variables</td>
+                <td class="p-3 text-red-600">Drop erróneo de country, date_added, vote_count</td>
+                <td class="p-3 text-emerald-700">Restitución de variables con >92% datos válidos</td>
+                <td class="p-3">Habilita mapas, líneas temporales y volumen de votos</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Redundancia</td>
+                <td class="p-3 text-amber-600">rating idéntico al 100% con vote_average</td>
+                <td class="p-3 text-emerald-700">Eliminación de rating, retención de vote_average</td>
+                <td class="p-3">Claridad semántica, sin duplicación de métricas</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Colisión de IDs</td>
+                <td class="p-3 text-red-600">397 show_id duplicados entre películas y series</td>
+                <td class="p-3 text-emerald-700">Clave compuesta content_key (movies_123, tv_123)</td>
+                <td class="p-3">Integridad referencial garantizada</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Sesgos de Rating</td>
+                <td class="p-3 text-amber-600">14.2% ceros y ratings 10.0 con 1 solo voto</td>
+                <td class="p-3 text-emerald-700">Fórmula Bayesiana de Weighted Rating + flag votos</td>
+                <td class="p-3">Rankings no distorsionados, promedios confiables</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Tab switching logic
+    function switchTab(tab) {
+      document.getElementById('tab-dashboard').classList.add('hidden');
+      document.getElementById('tab-story').classList.add('hidden');
+      document.getElementById('tab-audit').classList.add('hidden');
+
+      document.getElementById('btn-dashboard').className = "text-slate-500 hover:text-slate-700 py-2 px-1 text-sm font-medium transition-colors";
+      document.getElementById('btn-story').className = "text-slate-500 hover:text-slate-700 py-2 px-1 text-sm font-medium transition-colors";
+      document.getElementById('btn-audit').className = "text-slate-500 hover:text-slate-700 py-2 px-1 text-sm font-medium transition-colors";
+
+      if (tab === 'dashboard') {
+        document.getElementById('tab-dashboard').classList.remove('hidden');
+        document.getElementById('btn-dashboard').className = "tab-active py-2 px-1 text-sm font-medium transition-colors";
+      } else if (tab === 'story') {
+        document.getElementById('tab-story').classList.remove('hidden');
+        document.getElementById('btn-story').className = "tab-active py-2 px-1 text-sm font-medium transition-colors";
+      } else if (tab === 'audit') {
+        document.getElementById('tab-audit').classList.remove('hidden');
+        document.getElementById('btn-audit').className = "tab-active py-2 px-1 text-sm font-medium transition-colors";
+      }
+    }
+
+    // Chart.js Implementations
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Genres Bar Chart
+      const ctxGenres = document.getElementById('chartGenres').getContext('2d');
+      new Chart(ctxGenres, {
+        type: 'bar',
+        data: {
+          labels: ['Drama', 'Comedy', 'Action', 'Adventure', 'Thriller', 'Animation', 'Romance', 'Crime', 'Sci-Fi', 'Horror', 'Family', 'Doc'],
+          datasets: [{
+            label: 'Títulos Únicos',
+            data: [14484, 8693, 6210, 5840, 5120, 4830, 4410, 3920, 3650, 3210, 2980, 2450],
+            backgroundColor: '#1f77b4',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+        }
+      });
+
+      // 2. Countries Doughnut / Bar
+      const ctxCountries = document.getElementById('chartCountries').getContext('2d');
+      new Chart(ctxCountries, {
+        type: 'bar',
+        data: {
+          labels: ['Estados Unidos', 'Japón', 'China', 'Corea del Sur', 'Reino Unido', 'Canadá', 'Francia', 'India', 'Alemania', 'España'],
+          datasets: [{
+            label: 'Títulos Producidos',
+            data: [8181, 2761, 2283, 2070, 1713, 1510, 1353, 856, 790, 575],
+            backgroundColor: '#0284c7',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+        }
+      });
+
+      // 3. Timeline Chart
+      const ctxTimeline = document.getElementById('chartTimeline').getContext('2d');
+      new Chart(ctxTimeline, {
+        type: 'line',
+        data: {
+          labels: ['2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'],
+          datasets: [
+            {
+              label: 'Películas',
+              data: [850, 1420, 2350, 3100, 3250, 2600, 1850, 410, 120, 50],
+              borderColor: '#1f77b4',
+              backgroundColor: 'rgba(31, 119, 180, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Series de TV',
+              data: [420, 780, 1650, 2800, 3100, 2950, 2200, 850, 680, 560],
+              borderColor: '#ff7f0e',
+              backgroundColor: 'rgba(255, 127, 14, 0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { grid: { display: false } } }
+        }
+      });
+
+      // 4. Scatter Plot (Sample)
+      const ctxScatter = document.getElementById('chartScatter').getContext('2d');
+      new Chart(ctxScatter, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Películas',
+              data: [
+                {x: 156, y: 8.36}, {x: 203, y: 6.39}, {x: 121, y: 7.74}, {x: 111, y: 7.60},
+                {x: 45, y: 8.10}, {x: 35, y: 6.40}, {x: 12, y: 7.80}, {x: 8, y: 8.20},
+                {x: 85, y: 5.40}, {x: 95, y: 5.80}, {x: 18, y: 5.10}, {x: 25, y: 5.30}
+              ],
+              backgroundColor: 'rgba(31, 119, 180, 0.7)'
+            },
+            {
+              label: 'Series de TV',
+              data: [
+                {x: 1929, y: 8.24}, {x: 1670, y: 7.03}, {x: 1317, y: 5.60}, {x: 1095, y: 6.50},
+                {x: 55, y: 8.40}, {x: 40, y: 7.90}, {x: 15, y: 8.10}, {x: 65, y: 5.20}
+              ],
+              backgroundColor: 'rgba(255, 127, 14, 0.7)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { type: 'logarithmic', title: { display: true, text: 'Popularidad (Log)' } },
+            y: { min: 4, max: 10, title: { display: true, text: 'Weighted Rating' } }
+          }
+        }
+      });
+    });
+
+    function applyFilters() {
+      // Interactive filter handler demo
+      const type = document.getElementById('filter-type').value;
+      const kpiTotal = document.getElementById('kpi-total');
+      const kpiMovies = document.getElementById('kpi-movies');
+      const kpiTv = document.getElementById('kpi-tv');
+
+      if (type === 'Movie') {
+        kpiTotal.innerText = '16,000';
+      } else if (type === 'TV Show') {
+        kpiTotal.innerText = '15,991';
+      } else {
+        kpiTotal.innerText = '31,991';
+      }
+    }
+  </script>
+</body>
+</html>
+
